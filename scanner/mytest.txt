@@ -1,0 +1,5 @@
+fantaisie impromptu
+x = a + b / c * d % e < 5 > 2 <> := = <= >=
+/* arlesienne 
+swan la*/ke/*//*////**/ canon
+/canon*
