@@ -32,6 +32,7 @@ public class Scanner
      * FileInputStream inStream = new FileInputStream(new File(<file name>);
      * Scanner lex = new Scanner(inStream);
      * @param inStream the input stream to use
+     * @throws IOException
      */
     public Scanner(InputStream inStream) throws IOException
     {
@@ -46,6 +47,7 @@ public class Scanner
      * the first character of the input string into the instance field currentChar.
      * Usage: Scanner lex = new Scanner(input_string);
      * @param inString the string to scan
+     * @throws IOException
      */
     public Scanner(String inString) throws IOException
     {
@@ -74,6 +76,8 @@ public class Scanner
     /**
      * Retrieves the next character if it is equal to an input character
      * @param c: the input character
+     * @throws ScanErrorException
+     * @throws IOException
      */
     private void eat(char c) throws ScanErrorException, IOException
     {
@@ -154,6 +158,8 @@ public class Scanner
 
     /**
      * @return a number given by the regular expression digit (digit)* as a token
+     * @throws ScanErrorException
+     * @throws IOException
      */
     private Token scanNumber() throws ScanErrorException, IOException
     {
@@ -169,6 +175,8 @@ public class Scanner
 
     /**
      * @return an identifier given by the regular expression letter (letter | digit)* as a token
+     * @throws ScanErrorException
+     * @throws IOException
      */
     private Token scanIdentifier() throws ScanErrorException, IOException
     {
@@ -187,6 +195,8 @@ public class Scanner
      * 
      * @return an operand as a token
      *         operands are '+', '-', '*', '/', '%', '(', ')', ':=', '<=', '>=', '<>'
+     * @throws ScanErrorException 
+     * @throws IOException
      */
     private Token scanOperand() throws ScanErrorException, IOException
     {
@@ -223,6 +233,8 @@ public class Scanner
 
     /**
      * @return a separator (comma and semicolon) as a token
+     * @throws ScanErrorException
+     * @throws IOException
      */
     private Token scanSeparator() throws ScanErrorException, IOException
     {   
@@ -233,6 +245,8 @@ public class Scanner
 
     /**
      * @return end of file token ("EOF")
+     * @throws ScanErrorException
+     * @throws IOException
      */
     private Token scanEOF() throws ScanErrorException, IOException
     {
@@ -247,6 +261,8 @@ public class Scanner
      * singleLine is true: upon scanning "//", removes every character until '\n', deletes inline comment
      * singleLine is false: upon scanning "/*", remove every character until star and slash
      * @param singleLine: true if single 
+     * @throws ScanErrorException
+     * @throws IOException
      */
     private void removeComment(boolean singleLine) throws ScanErrorException, IOException
     {
@@ -272,6 +288,8 @@ public class Scanner
      * removes all whitespace between currentChar and the next token
      * identifies the type of token based on its first character
      * @return the next token
+     * @throws ScanErrorException
+     * @throws IOException
      */
     public Token nextToken() throws ScanErrorException, IOException
     {
@@ -306,6 +324,8 @@ public class Scanner
     /**
      * tokenizes the input stream into is respective tokens, ending with "EOF" as end of file token
      * @return a list of tokens
+     * @throws ScanErrorException
+     * @throws IOException
      */
     public ArrayList<Token> tokenize() throws ScanErrorException, IOException
     {
@@ -316,11 +336,15 @@ public class Scanner
     }
 
     /**
-     * Tests the scanner, reads input from standard in
+     * Tests the scanner, reads input from a file or standard input depending on which line is commented
+     * @throws ScanErrorException
+     * @throws FileNotFoundException
+     * @throws IOException
      */
     public static void main(String[] args) throws ScanErrorException, FileNotFoundException, IOException
     {
-        Scanner sc = new Scanner(new FileInputStream("scanner/scannerTestAdvanced.txt"));
+        // Scanner sc = new Scanner(new FileInputStream("scanner/scannerTestAdvanced.txt"));
+        Scanner sc = new Scanner(new FileInputStream("scanner/mytest.txt"));
         // Scanner sc = new Scanner(System.in);
         
         ArrayList<Token> tokens = sc.tokenize();
