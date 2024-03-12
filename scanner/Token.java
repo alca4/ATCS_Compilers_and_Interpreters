@@ -1,5 +1,4 @@
 package scanner;
-
 /*
  * @author: Andrew Liang
  * @version: 01.26.24
@@ -15,8 +14,8 @@ package scanner;
 
 public class Token 
 {
-    private String lexeme;
-    private String type;
+    public String lexeme;
+    public String type;
     
     /*
      * @param inputLexeme: intializes the lexeme
@@ -37,5 +36,10 @@ public class Token
     public String toString()
     {
         return "[" + type + ": \"" + lexeme + "\"]";
+    }
+
+    public boolean equals(Token other)
+    {
+        return type.equals(other.type) && lexeme.equals(other.lexeme);
     }
 }
