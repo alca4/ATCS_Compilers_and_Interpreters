@@ -1,8 +1,5 @@
 package parser;
 
-import java.io.File;
-import java.io.FileInputStream;
-
 /**
  * @author Andrew Liang
  * @version 03.04.24
@@ -24,7 +21,7 @@ import scanner.Token;
  * Can handle addition, subtraction, multiplication, division, mod, parentheses
  * Can support integer variables
  */
-public class Parser
+public class OldParser
 {
     /**
      * The scanner, generates the token stream
@@ -46,7 +43,7 @@ public class Parser
      * @throws ScanErrorException
      * @throws IOException
      */
-    public Parser(Scanner inputSc) throws ScanErrorException, IOException
+    public OldParser(Scanner inputSc) throws ScanErrorException, IOException
     {
         scanner = inputSc;
         currentToken = scanner.nextToken();
@@ -228,8 +225,9 @@ public class Parser
 
     public static void main(String[] args) throws ScanErrorException, IOException
     {
-        FileInputStream inStream = new FileInputStream(new File("parser/parser_test.txt"));
-        Parser p = new Parser(new Scanner(inStream));
+        Parser p = new Parser(new Scanner(System.in));
+
+        // System.out.println(p.parseExpression());
         p.parseStatement();
     }
 }
