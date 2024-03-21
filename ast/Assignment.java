@@ -1,5 +1,7 @@
 package ast;
 
+import environment.Environment;
+
 public class Assignment extends Statement
 {
     private String var;
@@ -9,5 +11,10 @@ public class Assignment extends Statement
     {
         var = inputVar;
         exp = inputExp;
+    }
+
+    public void exec(Environment e)
+    {
+        e.setVariable(var, exp.eval(e));
     }
 }

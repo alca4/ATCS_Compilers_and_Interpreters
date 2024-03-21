@@ -1,5 +1,6 @@
 package parser;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 
@@ -11,12 +12,16 @@ import java.io.FileInputStream;
  */
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 
 import scanner.ScanErrorException;
 import scanner.Scanner;
 import scanner.Token;
+
+import ast.*;
+import environment.*;
 
 /**
  * Parses Pascal integer arithmetic code
@@ -34,10 +39,6 @@ public class Parser
      * Token currently examining
      */
     private Token currentToken;
-    /**
-     * stores variable names and their value
-     */
-    private Map<String, Integer> variables;
 
     /**
      * Initializes the scanner, the current token, and the map storing variables.
@@ -50,7 +51,6 @@ public class Parser
     {
         scanner = inputSc;
         currentToken = scanner.nextToken();
-        variables = new HashMap<String, Integer>();
     }
 
     /**
@@ -76,16 +76,39 @@ public class Parser
      * @throws ScanErrorException 
      * @throws IllegalArgumentException 
      */
-    private int parseNumber() throws IllegalArgumentException, ScanErrorException, IOException
+    private ast.Number parseNumber() throws IllegalArgumentException, ScanErrorException, IOException
     {
-        int ret = Integer.parseInt(currentToken.lexeme);
+        ast.Number ret = new ast.Number(Integer.parseInt(currentToken.lexeme));
         eat(currentToken);
         return ret;
     }
 
     /**
+     * C -> E comparator E
+     * 
+     * comparators: <, >, =, <>, <=, >=
+     * @return condition class containing condition
+     * @throws IllegalArgumentException
+     * @throws ScanErrorException
+     * @throws IOException
+     */
+    public Condition parseCondition() throws IllegalArgumentException, ScanErrorException, IOException
+    {
+        Expression e1 = parseExpression();
+        assert (currentToken.equals(new Token("<", "Operand")) ||
+                currentToken.equals(new Token(">", "Operand")) ||
+                currentToken.equals(new Token("<=", "Operand")) ||
+                currentToken.equals(new Token(">=", "Operand")) ||
+                currentToken.equals(new Token("=", "Operand")) ||
+                currentToken.equals(new Token("<>", "Operand")));
+        String op = currentToken.lexeme;
+        eat(currentToken);
+        return new Condition(op, e1, parseExpression());
+    }
+
+    /**
      * Defined by the grammar
-     * S -> "WRITELN"(E) | "BEGIN" S2 "END"
+     * S -> "WRITELN"(E) | "BEGIN" S2 "END" | Identifire := Expression
      * S2 -> S S2 | epsilon
      * 
      * Evaluates a statement (a program or a single line)
@@ -95,29 +118,94 @@ public class Parser
      * @throws ScanErrorException
      * @throws IOException
      */
-    public void parseStatement() throws IllegalArgumentException, ScanErrorException, IOException
+    public Statement parseStatement() throws IllegalArgumentException, ScanErrorException, IOException
     {
+        Statement ret;
         if (currentToken.equals(new Token("BEGIN", "identifier")))
         {
             eat(currentToken);
-            while (!currentToken.equals(new Token("END", "identifier"))) parseStatement();
+            List<Statement> block = new ArrayList<Statement>();
+
+            while (!currentToken.equals(new Token("END", "identifier"))) 
+                block.add(parseStatement());
+            
+            ret = new Block(block);
             eat(currentToken);
+            eat(new Token(";", "separator"));
         }
         else if (currentToken.equals(new Token("WRITELN", "identifier")))
         {
             eat(currentToken);
             eat(new Token("(", "operand"));
-            System.out.println(parseExpression());
+            ret = new WriteLn(parseExpression());
             eat(new Token(")", "operand"));
+            eat(new Token(";", "separator"));
+        }
+        else if (currentToken.equals(new Token("READLN", "identifier")))
+        {
+            eat(currentToken);
+            eat(new Token("(", "operand"));
+            assert(currentToken.type.equals("identifier"));
+            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+            int val = Integer.parseInt(reader.readLine());
+            System.out.println("read values is " + val);
+            ret = new Assignment(currentToken.lexeme, new ast.Number(val));
+            eat(currentToken);
+            eat(new Token(")", "operand"));
+            eat(new Token(";", "separator"));
+        }
+        else if (currentToken.equals(new Token("IF", "identifier")))
+        {
+            eat(currentToken);
+            Condition c = parseCondition();
+            eat(new Token("THEN", "identifier"));
+            ret = new If(c, parseStatement());
+        }
+        else if (currentToken.equals(new Token("WHILE", "identifier")))
+        {
+            eat(currentToken);
+            Condition c = parseCondition();
+            eat(new Token("DO", "identifier"));
+            ret = new While(c, parseStatement());
+        }
+        else if (currentToken.equals(new Token("FOR", "identifier")))
+        {
+            eat(currentToken);
+            
+            assert(currentToken.type.equals("identifier"));
+            String loopVariable = currentToken.lexeme;
+            eat(currentToken);
+            eat(new Token(":=", "operand"));
+            Expression initValue = parseExpression();
+            Assignment init = new Assignment(loopVariable, initValue);
+
+            int dir = 1;
+            if (currentToken.lexeme.equals("DOWN")) 
+            {
+                dir = -1;
+                eat(currentToken);
+            }
+            eat(new Token("TO", "identifier"));
+            Assignment inc = new Assignment(loopVariable, 
+                                            new BinOp("+", 
+                                            new Variable(loopVariable), new ast.Number(dir)));
+            
+            Expression finalValue = parseExpression();
+            String compareOp = dir > 0 ? "<=" : ">=";
+            Condition c = new Condition(compareOp, new Variable(loopVariable), finalValue);
+
+            eat(new Token("DO", "identifier"));
+            ret = new For(init, inc, c, parseStatement());
         }
         else 
         {
             String varName = currentToken.lexeme;
             eat(currentToken);
             eat(new Token(":=", "operand"));
-            variables.put(varName, parseExpression());
+            ret = new Assignment(varName, parseExpression());
+            eat(new Token(";", "separator"));
         }
-        eat(new Token(";", "separator"));
+        return ret;
     }
 
     /**
@@ -132,9 +220,9 @@ public class Parser
      * @throws ScanErrorException
      * @throws IOException
      */
-    public int parseFactor() throws IllegalArgumentException, ScanErrorException, IOException
+    public Expression parseFactor() throws IllegalArgumentException, ScanErrorException, IOException
     {
-        int ret;
+        Expression ret;
         if (currentToken.equals(new Token("(", "operand")))
         {
             eat(currentToken);
@@ -144,11 +232,11 @@ public class Parser
         else if (currentToken.equals(new Token("-", "operand")))
         {
             eat(currentToken);
-            ret = -parseFactor();
+            ret = new BinOp("-", new ast.Number(0), parseFactor());
         }
         else if (currentToken.type.equals("identifier")) 
         {
-            ret = variables.get(currentToken.lexeme);
+            ret = new Variable(currentToken.lexeme);
             eat(currentToken);
         }
         else ret = parseNumber();
@@ -166,28 +254,16 @@ public class Parser
      * @throws ScanErrorException
      * @throws IOException
      */
-    public int parseTerm() throws IllegalArgumentException, ScanErrorException, IOException
+    public Expression parseTerm() throws IllegalArgumentException, ScanErrorException, IOException
     {
-        int ret = parseFactor();
+        Expression ret = parseFactor();
         while (currentToken.equals(new Token("*", "operand")) ||
                currentToken.equals(new Token("/", "operand")) ||
                currentToken.equals(new Token("mod", "identifier")))
-        {            
-            if (currentToken.equals(new Token("*", "operand"))) 
-            {
-                eat(currentToken);
-                ret *= parseFactor();
-            }
-            else if (currentToken.equals(new Token("/", "operand"))) 
-            {
-                eat(currentToken);
-                ret /= parseFactor();
-            }
-            else 
-            {
-                eat(currentToken);
-                ret %= parseFactor();
-            }
+        {
+            String op = currentToken.lexeme;
+            eat(currentToken);
+            ret = new BinOp(op, ret, parseFactor());
         }
 
         return ret;
@@ -205,22 +281,16 @@ public class Parser
      * @throws ScanErrorException
      * @throws IOException
      */
-    public int parseExpression() throws IllegalArgumentException, ScanErrorException, IOException
+    public Expression parseExpression() throws IllegalArgumentException, ScanErrorException, IOException
     {
-        int ret = parseTerm();
+        Expression ret = parseTerm();
+
         while (currentToken.equals(new Token("+", "operand")) ||
                currentToken.equals(new Token("-", "operand")))
         {
-            if (currentToken.equals(new Token("+", "operand")))
-            {
-                eat(currentToken);
-                ret += parseTerm();
-            }
-            else
-            {
-                eat(currentToken);
-                ret -= parseTerm();
-            }
+            String op = currentToken.lexeme;
+            eat(currentToken);
+            ret = new BinOp(op, ret, parseTerm());
         }
 
         return ret;
@@ -228,8 +298,8 @@ public class Parser
 
     public static void main(String[] args) throws ScanErrorException, IOException
     {
-        FileInputStream inStream = new FileInputStream(new File("parser/parser_test.txt"));
+        FileInputStream inStream = new FileInputStream(new File("parser/parser_test_0.txt"));
         Parser p = new Parser(new Scanner(inStream));
-        p.parseStatement();
+        p.parseStatement().exec(new Environment());
     }
 }
