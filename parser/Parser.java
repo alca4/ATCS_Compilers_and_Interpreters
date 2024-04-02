@@ -3,16 +3,9 @@ package parser;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-
-/**
- * @author Andrew Liang
- * @version 03.04.24
- * 
- * Parses Pascal integer arithmetic code
- */
-
 import java.io.IOException;
 import java.io.InputStreamReader;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,13 +17,22 @@ import ast.*;
 import environment.*;
 
 /**
- * Parses Pascal integer arithmetic code
+ * @author Andrew Liang
+ * @version 03.04.24
+ * 
+ * Parses Pascal code
  * 
  * Can handle addition, subtraction, multiplication, division, mod, parentheses
+ * Can handle boolean comparison
  * Can support integer variables
+ * Can support if, for, while constructs
  */
 public class Parser
 {
+    /**
+     * Takes in input from stdin
+     */
+    private BufferedReader inputReader;
     /**
      * The scanner, generates the token stream
      */
@@ -51,6 +53,7 @@ public class Parser
     {
         scanner = inputSc;
         currentToken = scanner.nextToken();
+        inputReader = new BufferedReader(new InputStreamReader(System.in));
     }
 
     /**
@@ -69,9 +72,9 @@ public class Parser
     }
 
     /**
-     * @precondition currentToken.type() == "number"
+     * @precondition currentToken.type() is "number"
      * @postcondition token stream is advanced by 1
-     * @return value of parsed integer
+     * @return Number class with integer
      * @throws IOException 
      * @throws ScanErrorException 
      * @throws IllegalArgumentException 
@@ -87,7 +90,7 @@ public class Parser
      * C -> E comparator E
      * 
      * comparators: <, >, =, <>, <=, >=
-     * @return condition class containing condition
+     * @return Condition class containing condition
      * @throws IllegalArgumentException
      * @throws ScanErrorException
      * @throws IOException
@@ -108,12 +111,14 @@ public class Parser
 
     /**
      * Defined by the grammar
-     * S -> "WRITELN"(E) | "BEGIN" S2 "END" | Identifire := Expression
+     * S -> "WRITELN"(E); | "BEGIN" S2 "END" | ID := E | "IF" C "THEN" E | 
+     *      "WHILE" C "DO" S | "FOR" ID := E D "TO" E DO S
      * S2 -> S S2 | epsilon
+     * D -> "DOWN" | epsilon
      * 
      * Evaluates a statement (a program or a single line)
      * 
-     * @precondition currentToken is "WRITELN"
+     * @return  
      * @throws IllegalArgumentException
      * @throws ScanErrorException
      * @throws IOException
@@ -146,8 +151,7 @@ public class Parser
             eat(currentToken);
             eat(new Token("(", "operand"));
             assert(currentToken.type.equals("identifier"));
-            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-            int val = Integer.parseInt(reader.readLine());
+            int val = Integer.parseInt(inputReader.readLine());
             System.out.println("read values is " + val);
             ret = new Assignment(currentToken.lexeme, new ast.Number(val));
             eat(currentToken);
@@ -215,7 +219,7 @@ public class Parser
      *   -> I
      * I is an integer
      * 
-     * @return integer value of the factor
+     * @return An Expression class with the factor
      * @throws IllegalArgumentException
      * @throws ScanErrorException
      * @throws IOException
@@ -249,7 +253,7 @@ public class Parser
      * T  -> FT'
      * T' -> *FT' | /FT' | F
      * 
-     * @return integer value of the term
+     * @return An Expression class containing the term
      * @throws IllegalArgumentException
      * @throws ScanErrorException
      * @throws IOException
@@ -276,7 +280,7 @@ public class Parser
      * 
      * Handles repeated addition and subtraction
      * 
-     * @return integer value of the term
+     * @return An Expression class with the term
      * @throws IllegalArgumentException
      * @throws ScanErrorException
      * @throws IOException
@@ -296,6 +300,13 @@ public class Parser
         return ret;
     }
 
+    /**
+     * Tests the parser from a set file
+     * 
+     * @param args commandline arguments that aren't used
+     * @throws ScanErrorException
+     * @throws IOException
+     */
     public static void main(String[] args) throws ScanErrorException, IOException
     {
         FileInputStream inStream = new FileInputStream(new File("parser/parser_test_0.txt"));
