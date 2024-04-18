@@ -140,7 +140,7 @@ public class Scanner
      */
     public static boolean isSeparator(char c)
     {
-        return ",;".indexOf(c) != -1;
+        return ".,;".indexOf(c) != -1;
     }
 
     /**
@@ -298,7 +298,6 @@ public class Scanner
             while (hasNext() && isWhitespace(currentChar)) eat(currentChar);
 
             if (!hasNext()) return new Token("EOF", "EOF");
-            else if (isEOF(currentChar)) return scanEOF();
             else if (isDigit(currentChar)) return scanNumber();
             else if (isLetter(currentChar)) return scanIdentifier();
             else if (isOperand(currentChar)) 

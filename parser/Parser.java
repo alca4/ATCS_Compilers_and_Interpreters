@@ -72,6 +72,67 @@ public class Parser
     }
 
     /**
+     * Parses a program, which contains multiple procedure declarations and a statement
+     * 
+     * @return the program
+     * @throws ScanErrorException
+     * @throws IOException
+     * @throws IllegalArgumentException
+     */
+    public Program parseProgram() throws ScanErrorException, IOException, IllegalArgumentException
+    {
+        List<ProcedureDeclaration> decls = new ArrayList<ProcedureDeclaration>();
+        while (currentToken.equals(new Token("PROCEDURE", "identifier"))) 
+            decls.add(parseProcedureDeclaration());
+        
+        return new Program(decls, parseStatement());
+    }
+
+    /**
+     * Format:
+     * PROCEDURE foo();
+     * BEGIN
+     *      x:=2;
+     *      y:=7;
+     *      ignore:=bar();
+     *      WRITELN(y);
+     * END;
+     * 
+     * @return Proceduredeclaration 
+     * @throws ScanErrorException
+     * @throws IOException
+     * @throws IllegalArgumentException
+     */
+    private ProcedureDeclaration parseProcedureDeclaration() throws ScanErrorException, IOException, IllegalArgumentException
+    {
+        eat(new Token("PROCEDURE", "identifier"));
+        assert(currentToken.lexeme.equals("identifier"));
+        String name = currentToken.lexeme;
+        eat(currentToken);
+        eat(new Token("(", "operand"));
+
+        List<String> params = new ArrayList<String>();
+
+        boolean moreParams = !currentToken.equals(new Token(")", "operand"));
+        while (moreParams) 
+        {
+            assert(currentToken.type.equals("identifier"));
+            params.add(currentToken.lexeme);
+            eat(currentToken);
+
+            moreParams = currentToken.equals(new Token(",", "separator"));
+            if (moreParams) eat(currentToken);
+        }
+            
+
+        eat(new Token(")", "operand"));
+        eat(new Token(";", "separator"));
+
+        ProcedureDeclaration pd = new ProcedureDeclaration(name, parseStatement(), params);
+        return pd;
+    }
+
+    /**
      * @precondition currentToken.type() is "number"
      * @postcondition token stream is advanced by 1
      * @return Number class with integer
@@ -98,12 +159,12 @@ public class Parser
     public Condition parseCondition() throws IllegalArgumentException, ScanErrorException, IOException
     {
         Expression e1 = parseExpression();
-        assert (currentToken.equals(new Token("<", "Operand")) ||
-                currentToken.equals(new Token(">", "Operand")) ||
-                currentToken.equals(new Token("<=", "Operand")) ||
-                currentToken.equals(new Token(">=", "Operand")) ||
-                currentToken.equals(new Token("=", "Operand")) ||
-                currentToken.equals(new Token("<>", "Operand")));
+        assert (currentToken.equals(new Token("<", "operand")) ||
+                currentToken.equals(new Token(">", "operand")) ||
+                currentToken.equals(new Token("<=", "operand")) ||
+                currentToken.equals(new Token(">=", "operand")) ||
+                currentToken.equals(new Token("=", "operand")) ||
+                currentToken.equals(new Token("<>", "operand")));
         String op = currentToken.lexeme;
         eat(currentToken);
         return new Condition(op, e1, parseExpression());
@@ -152,7 +213,6 @@ public class Parser
             eat(new Token("(", "operand"));
             assert(currentToken.type.equals("identifier"));
             int val = Integer.parseInt(inputReader.readLine());
-            System.out.println("read values is " + val);
             ret = new Assignment(currentToken.lexeme, new ast.Number(val));
             eat(currentToken);
             eat(new Token(")", "operand"));
@@ -240,8 +300,28 @@ public class Parser
         }
         else if (currentToken.type.equals("identifier")) 
         {
-            ret = new Variable(currentToken.lexeme);
+            String name = currentToken.lexeme;
             eat(currentToken);
+
+            if (currentToken.equals(new Token("(", "operand")))
+            {
+                eat(new Token("(", "operand"));
+
+                List<Expression> params = new ArrayList<Expression>();
+
+                boolean moreParams = !currentToken.equals(new Token(")", "operand"));
+                while (moreParams) 
+                {
+                    params.add(parseExpression());
+
+                    moreParams = currentToken.equals(new Token(",", "separator"));
+                    if (moreParams) eat(currentToken);
+                }
+                ret = new ProcedureCall(name, params);
+                
+                eat(new Token(")", "operand"));
+            }
+            else ret = new Variable(name);
         }
         else ret = parseNumber();
 
@@ -311,6 +391,7 @@ public class Parser
     {
         FileInputStream inStream = new FileInputStream(new File("parser/parser_test_0.txt"));
         Parser p = new Parser(new Scanner(inStream));
-        p.parseStatement().exec(new Environment());
+        Environment e = new Environment(null);
+        p.parseProgram().exec(e);
     }
 }

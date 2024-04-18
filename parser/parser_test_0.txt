@@ -1,18 +1,20 @@
+PROCEDURE foo();
 BEGIN
-x := 2;
-y := x + 1;
-x := x + y;
-WRITELN(x * y);
-IF x > y THEN
-    BEGIN
+    x:=2;
+    y:=7;
+    ignore:=bar();
+    WRITELN(y);
+END;
+
+PROCEDURE bar();
+BEGIN
+    x:=3;
+    y:=y+2;
+END;
+
+BEGIN
+    x:=1;
+    ignore:=foo();
     WRITELN(x);
     WRITELN(y);
-    END;
-x := 0;
-WHILE x < 10 DO
-BEGIN
-WRITELN(x);
-x := x + 1;
 END;
-END;
-.

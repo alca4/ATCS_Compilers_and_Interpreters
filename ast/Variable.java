@@ -11,6 +11,9 @@ import environment.Environment;
  */
 public class Variable extends Expression
 {
+    /**
+     * name of variable
+     */
     private String name;
 
     /**
