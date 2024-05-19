@@ -47,12 +47,10 @@ public class ProcedureCall extends Expression
         Environment e2 = new Environment(e);
         for (int i = 0; i < params.size(); i++) 
         {
-            Assignment a = new Assignment(d.params.get(i), params.get(i));
-            a.exec(e2);
+            e2.declareVariable(d.params.get(i), params.get(i).eval(e));
         }
 
-        Assignment retValue = new Assignment(name, new Number(0));
-        retValue.exec(e2);
+        e2.declareVariable(name, 0);
         d.stmt.exec(e2);
 
         return e2.getVariable(name);

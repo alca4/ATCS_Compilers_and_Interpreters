@@ -10,7 +10,7 @@ import java.util.List;
  * 
  * Stores a program
  */
-public class Program extends Statement
+public class Program
 {
     /**
      * predefined procedures

@@ -1,20 +1,31 @@
-PROCEDURE foo();
+PROCEDURE Add(y,w,z);
 BEGIN
-    x:=2;
-    y:=7;
-    ignore:=bar();
-    WRITELN(y);
+WRITELN(y);
+WRITELN(w);
+WRITELN(z);
+x := x + y;
 END;
-
-PROCEDURE bar();
 BEGIN
-    x:=3;
-    y:=y+2;
-END;
-
+x := 2;
+y := x + 1;
+x := x + y;
+WRITELN(x * y);
+IF x > y THEN
 BEGIN
-    x:=1;
-    ignore:=foo();
-    WRITELN(x);
-    WRITELN(y);
+WRITELN(x);
+WRITELN(y);
 END;
+x := 0;
+WHILE x < 10 DO
+BEGIN
+WRITELN(x);
+x := x + 1;
+END;
+WRITELN(y);
+ignore := Add(4,x,y);
+WRITELN(x);
+END;
+.
+.
+.
+.

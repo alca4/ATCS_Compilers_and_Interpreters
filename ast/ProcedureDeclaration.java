@@ -42,6 +42,8 @@ public class ProcedureDeclaration extends Statement
     }
 
     /**
+     * Declares the procedure in e
+     * 
      * @param e environment which the variables will be in
      */
     public void exec(Environment e)

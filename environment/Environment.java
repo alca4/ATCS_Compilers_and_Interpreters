@@ -87,8 +87,8 @@ public class Environment
      */
     public int getVariable(String varName)
     {
-        if (parent != null && !checkVariableInEnv(varName)) return parent.getVariable(varName);
-        else if (checkVariableInEnv(varName)) return variables.get(varName);
+        if (checkVariableInEnv(varName)) return variables.get(varName);
+        else if (parent != null && !checkVariableInEnv(varName)) return parent.getVariable(varName);
         else return 0;
     }
 
