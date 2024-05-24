@@ -1,6 +1,7 @@
 package ast;
 
 import environment.Environment;
+import codegen.Emitter;
 
 /**
  * @author Andrew Liang
@@ -15,9 +16,9 @@ public class While extends Statement
      */
     private Condition cond;
     /**
-     * Expression to evaluate
+     * Statement to evaluate
      */
-    private Statement exp;
+    private Statement stmt;
 
     /**
      * Initializes instance fields
@@ -28,7 +29,7 @@ public class While extends Statement
     public While(Condition inputCond, Statement inputState)
     {
         cond = inputCond;
-        exp = inputState;
+        stmt = inputState;
     }
 
     /**
@@ -38,6 +39,28 @@ public class While extends Statement
      */
     public void exec(Environment e)
     {
-        while (cond.eval(e) == 1) exp.exec(e);
+        while (cond.eval(e) == 1) stmt.exec(e);
+    }
+
+    /**
+     * creates a label to do the loop in
+     * compiles everything inside the loop in this label
+     * creates another label for after the loop
+     * 
+     * @param e emitter to compile code with
+     */
+    public void compile(Emitter e)
+    {
+        String startLabel = "startwhile" + e.nextLabel();
+        String endLabel = "endwhile" + e.nextLabel();
+
+        e.emit("j " + startLabel);
+        e.emit(startLabel + ":");
+
+        cond.compile(e, endLabel);
+
+        stmt.compile(e);
+        e.emit("j " + startLabel);
+        e.emit(endLabel + ":");
     }
 }

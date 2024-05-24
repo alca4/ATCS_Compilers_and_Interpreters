@@ -1,6 +1,7 @@
 package ast;
 
 import environment.Environment;
+import codegen.Emitter;
 
 /**
  * @author Andrew Liang
@@ -33,5 +34,16 @@ public class Variable extends Expression
     public int eval(Environment e)
     {
         return e.getVariable(name);
+    }
+
+    /**
+     * retrieves value of variable to $t0
+     * 
+     * @param e emitter to compile code with
+     */
+    public void compile(Emitter e)
+    {
+        e.emit("la $t0 " + name);
+        e.emit("lw $v0 ($t0)");
     }
 }

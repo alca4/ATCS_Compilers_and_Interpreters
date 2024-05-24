@@ -3,7 +3,7 @@ package ast;
 import java.util.List;
 
 import environment.Environment;
-
+import codegen.Emitter;
 /**
  * @author Andrew Liang
  * @version 3.21.24
@@ -34,5 +34,15 @@ public class Block extends Statement
     public void exec(Environment e)
     {
         for (Statement s : stmts) s.exec(e);
+    }
+
+    /**
+     * compiles each statement
+     * 
+     * @param e emitter to compile code with
+     */
+    public void compile(Emitter e)
+    {
+        for (Statement s : stmts) s.compile(e);
     }
 }

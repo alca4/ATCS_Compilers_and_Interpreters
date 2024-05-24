@@ -1,6 +1,7 @@
 package ast;
 
 import environment.Environment;
+import codegen.Emitter;
 
 /**
  * @author Andrew Liang
@@ -38,5 +39,17 @@ public class Assignment extends Statement
     public void exec(Environment e)
     {
         e.setVariable(var, exp.eval(e));
+    }
+
+    /**
+     * assigns a value to a variable by storing the value to $t0 first
+     * 
+     * @param e emitter to compile code with
+     */
+    public void compile(Emitter e)
+    {
+        exp.compile(e);
+        e.emit("la $t0 " + var);
+        e.emit("sw $v0 ($t0)");
     }
 }

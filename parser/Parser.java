@@ -72,7 +72,7 @@ public class Parser
     }
 
     /**
-     * Parses a program, which contains multiple procedure declarations and a statement
+     * Parses a program, which contains variable delcarations, multiple procedure declarations and a statement
      * 
      * @return the program
      * @throws ScanErrorException
@@ -81,11 +81,28 @@ public class Parser
      */
     public Program parseProgram() throws ScanErrorException, IOException, IllegalArgumentException
     {
+        List<String> vars = new ArrayList<String>();
+        if (currentToken.equals(new Token("VAR", "identifier")))
+        {
+            eat(currentToken);
+            vars.add(currentToken.lexeme);
+            eat(currentToken);
+
+            while (currentToken.equals(new Token(",", "separator")))
+            {
+                eat(currentToken);
+                vars.add(currentToken.lexeme);
+                eat(currentToken);
+            }
+
+            eat(new Token(";", "separator"));
+        }
+        
         List<ProcedureDeclaration> decls = new ArrayList<ProcedureDeclaration>();
         while (currentToken.equals(new Token("PROCEDURE", "identifier"))) 
             decls.add(parseProcedureDeclaration());
         
-        return new Program(decls, parseStatement());
+        return new Program(decls, parseStatement(), vars);
     }
 
     /**
@@ -392,6 +409,7 @@ public class Parser
         FileInputStream inStream = new FileInputStream(new File("parser/parser_test_0.txt"));
         Parser p = new Parser(new Scanner(inStream));
         Environment e = new Environment(null);
-        p.parseProgram().exec(e);
+        Program pg = p.parseProgram();
+        pg.compile("parser/AAH.txt");
     }
 }

@@ -1,6 +1,7 @@
 package ast;
 
 import environment.Environment;
+import codegen.Emitter;
 
 /**
  * @author Andrew Liang
@@ -38,5 +39,19 @@ public class If extends Statement
     public void exec(Environment e)
     {
         if (cond.eval(e) == 1) stmt.exec(e);
+    }
+
+    /**
+     * compiles the condition, creates new label and compiles statement in new label
+     * 
+     * @param e emitter to compile code with
+     */
+    public void compile(Emitter e)
+    {
+        String label = "endif" + e.nextLabel();
+        cond.compile(e, label);
+
+        e.emit(label + ":");
+        stmt.compile(e);
     }
 }

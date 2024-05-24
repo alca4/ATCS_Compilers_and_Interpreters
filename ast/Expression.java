@@ -1,5 +1,8 @@
 package ast;
 
+import javax.management.RuntimeErrorException;
+
+import codegen.Emitter;
 import environment.Environment;
 
 /**
@@ -11,4 +14,8 @@ import environment.Environment;
 public abstract class Expression 
 {
     public abstract int eval(Environment e);
+    public void compile(Emitter e)
+    {
+        throw new RuntimeException("implement me pls");
+    }
 }

@@ -1,6 +1,7 @@
 package ast;
 
 import environment.Environment;
+import codegen.Emitter;
 
 /**
  * @author Andrew Liang
@@ -32,5 +33,15 @@ public class Number extends Expression
     public int eval(Environment e)
     {
         return value;
+    }
+
+    /**
+     * loads variable to $v0
+     * 
+     * @param e emitter to compile code with
+     */
+    public void compile(Emitter e)
+    {
+        e.emit("li $v0 " + value);
     }
 }

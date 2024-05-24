@@ -1,5 +1,6 @@
 package ast;
 
+import codegen.Emitter;
 import environment.Environment;
 
 /**
@@ -53,5 +54,28 @@ public class Condition extends Expression
         else if (op.equals(">=")) return v1 >= v2 ? 1 : 0;
         else if (op.equals("<>")) return v1 != v2 ? 1 : 0;
         else return v1 == v2 ? 1 : 0;
+    }
+
+    /**
+     * compiles the first expression pushes onto stack
+     * compiles the second expression, retrieves from stack
+     * performs the comparison
+     * 
+     * @param e emitter to compile code with
+     */
+    public void compile(Emitter e, String targetLabel)
+    {
+        exp1.compile(e);
+        e.emitPush();
+        exp2.compile(e);
+        
+        if (op.equals("<")) e.emit("blt $sp $v0 " + targetLabel);
+        else if (op.equals("<=")) e.emit("ble $sp $v0 " + targetLabel);
+        else if (op.equals(">")) e.emit("bgt $sp $v0 " + targetLabel);
+        else if (op.equals(">=")) e.emit("bge $sp $v0 " + targetLabel);
+        else if (op.equals("<>")) e.emit("bne $sp $v0 " + targetLabel);
+        else e.emit("beq $sp $v0 " + targetLabel);
+
+        e.emitPop();
     }
 }

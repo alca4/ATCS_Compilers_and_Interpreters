@@ -1,5 +1,9 @@
 package ast;
 
+import javax.management.RuntimeErrorException;
+
+
+import codegen.Emitter;
 import environment.Environment;
 
 /**
@@ -11,4 +15,8 @@ import environment.Environment;
 public abstract class Statement 
 {
     public abstract void exec(Environment e);
+    public void compile(Emitter e)
+    {
+        throw new RuntimeException("Implement me pls");
+    }
 }

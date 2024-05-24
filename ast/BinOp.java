@@ -1,5 +1,6 @@
 package ast;
 
+import codegen.Emitter;
 import environment.Environment;
 
 /**
@@ -52,5 +53,28 @@ public class BinOp extends Expression
         else if (op.equals("*")) return v1 * v2;
         else if (op.equals("/")) return v1 / v2;
         else return v1 % v2;
+    }
+
+    /**
+     * compiles the first expression pushes onto stack
+     * compiles the second expression, retrieves from stack
+     * performs the operation
+     * 
+     * @param e emitter to compile code with
+     */
+    public void compile(Emitter e)
+    {
+        exp1.compile(e);
+        e.emitPush();
+        exp2.compile(e);
+        e.emitPop();
+
+        String operationName;
+        if (op.equals("+")) operationName = "addu";
+        else if (op.equals("-")) operationName = "subu";
+        else if (op.equals("*")) operationName = "mul";
+        else operationName = "div";
+
+        e.emit(operationName + " $v0 $v0 $t0");
     }
 }
